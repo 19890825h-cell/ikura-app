@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>いくら？</title>
+
+  <!-- PWA / アイコン -->
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="icon.png">
+  <meta name="theme-color" content="#8b5cf6">
+
+  <style>
+    body{margin:0;font-family:system-ui,-apple-system,sans-serif;background:#f6f2fb;color:#2e2a36}
+    .wrap{max-width:520px;margin:0 auto;padding:18px}
+    .card{background:#fff;border-radius:18px;padding:16px;box-shadow:0 6px 18px rgba(139,92,246,.15)}
+    .logo{width:72px;height:72px;margin:0 auto 6px;border-radius:18px;background:linear-gradient(135deg,#ec4899,#8b5cf6);color:#fff;font-size:34px;font-weight:700;display:flex;align-items:center;justify-content:center}
+    h1{text-align:center;margin:4px 0 12px;color:#6d28d9;font-size:18px}
+    label{font-size:13px;margin-top:12px;display:block}
+    input{width:100%;font-size:18px;padding:12px;border-radius:12px;border:1px solid #ddd6fe;box-sizing:border-box}
+    .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .chips{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:10px}
+    button{border:none;border-radius:999px;padding:10px 14px;background:#ede9fe;color:#4c1d95;font-size:14px}
+    button.primary{background:#ec4899;color:#fff}
+    .note{font-size:12px;color:#666;margin-top:8px;text-align:center}
+    .out{margin-top:14px;background:#f5efff;border-radius:14px;padding:12px}
+    .kpi{display:grid;grid-template-columns:1fr 1.3fr;gap:10px}
+    .k{background:#fff;border-radius:12px;padding:10px;text-align:center;border:1px solid rgba(236,72,153,.25)}
+    .final{background:linear-gradient(135deg,#fde2f3,#f5d0fe);border:2px solid #ec4899}
+    .k .v{font-size:20px;font-weight:700}
+    .final .v{font-size:28px;color:#9d174d}
+    .foot{text-align:center;font-size:12px;color:#888;margin-top:12px}
+    .bar{display:flex;gap:10px;margin-top:12px}
+    .bar button{flex:1}
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <div class="card">
+      <div class="logo">￥</div>
+      <h1>いくら？</h1>
+
+      <div class="row">
+        <div>
+          <label>元値（円）</label>
+          <input id="price" inputmode="numeric" placeholder="例：1980">
+        </div>
+        <div>
+          <label>割引率（％）</label>
+          <input id="off" inputmode="decimal" placeholder="例：30">
+        </div>
+      </div>
+
+      <!-- ％ボタン：ぜんぶのせ -->
+      <div class="chips">
+        <button data-off="10">10%</button>
+        <button data-off="20">20%</button>
+        <button data-off="30">30%</button>
+        <button data-off="40">40%</button>
+        <button data-off="50" class="primary">半額</button>
+        <button data-off="70">70%</button>
+      </div>
+
+      <div class="note">
+        割引率は手入力OK（例：15 / 33.3）・割引後は<strong>10円単位で切り捨て</strong>
+      </div>
+
+      <div class="out">
+        <div class="kpi">
+          <div class="k">
+            <div>値引き</div>
+            <div class="v" id="save">-</div>
+          </div>
+          <div class="k final">
+            <div>割引後</div>
+            <div class="v" id="final">-</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="bar">
+        <button id="clear">クリア</button>
+        <button id="copy" class="primary">結果コピー</button>
+      </div>
+
+      <div class="foot">広告なし・通信なし</div>
+    </div>
+  </div>
+
+<script>
+  const price=document.getElementById("price");
+  const off=document.getElementById("off");
+  const save=document.getElementById("save");
+  const final=document.getElementById("final");
+
+  const yen=n=>isFinite(n)?Math.floor(n).toLocaleString()+"円":"-";
+  const floor10=n=>Math.floor(n/10)*10;
+
+  function calc(){
+    const p=Number(String(price.value).replace(/[^\d.]/g,""));
+    const o=Number(String(off.value).replace(/[^\d.]/g,""));
+    if(!p||!o){save.textContent="-";final.textContent="-";return;}
+    const d=p*o/100;
+    const a=floor10(p-d);
+    save.textContent=yen(d);
+    final.textContent=yen(a);
+  }
+  price.oninput=calc; off.oninput=calc;
+  document.querySelectorAll("[data-off]").forEach(b=>b.onclick=()=>{off.value=b.dataset.off;calc();});
+  document.getElementById("clear").onclick=()=>{price.value="";off.value="";calc();price.focus();};
+  document.getElementById("copy").onclick=async()=>{
+    try{
+      await navigator.clipboard.writeText(`元値:${price.value}円 / 割引:${off.value}% → 割引後:${final.textContent}`);
+    }catch{}
+  };
+</script>
+</body>
+</html>
